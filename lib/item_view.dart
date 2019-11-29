@@ -27,6 +27,7 @@ class _ItemViewState extends State<ItemView> {
     _textFieldController = TextEditingController(
       text: widget.item != null ? widget.item.title : null
     );
+    // Enable/Disable Save button
     _textFieldController.addListener((){
       setState(() {
         _onPressed = _textFieldController.text.isNotEmpty ? () => save() : null;
@@ -52,6 +53,8 @@ class _ItemViewState extends State<ItemView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
+              cursorColor: Colors.black,
+              autofocus: true,
               textCapitalization: TextCapitalization.sentences,
               controller: _textFieldController,
               onEditingComplete: _onPressed,
