@@ -80,7 +80,7 @@ class MyHomePageState extends State<MyHomePage> {
     return 
       DraggableCard(
         child: Image.asset(
-          'assets/images/icon.png',
+          'assets/images/icon-512.png',
           width: 128,
         ),
       );
