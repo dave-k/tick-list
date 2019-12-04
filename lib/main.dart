@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'item.dart';
-import 'item_view.dart';
+import 'draggable_card.dart';
+import 'custom_dialog.dart';
 
 void main() => runApp(MyApp());
 
@@ -39,10 +40,13 @@ class MyHomePageState extends State<MyHomePage> {
     loadData();
   }
 
+  GlobalKey<ScaffoldState> _key = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
     //Color c = const Color(0xff4CAF50); // green
     return Scaffold(
+      key: _key,
       appBar: AppBar(
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -58,7 +62,7 @@ class MyHomePageState extends State<MyHomePage> {
       body: list.isNotEmpty ? buildBody() : buildEmptyBody(),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () => goToItemView(),
+        onPressed: () => showItemDialog(),
       ),
     );
   }
@@ -73,12 +77,13 @@ class MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildEmptyBody() {
-    return Center(
-      child: Text(
-        'No Items',
-        style: TextStyle(color: Colors.black, fontSize: 20.0)
-      ),
-    );
+    return 
+      DraggableCard(
+        child: Image.asset(
+          'assets/images/icon.png',
+          width: 128,
+        ),
+      );
   }
 
   Widget buildItem(Item item, int index) {
@@ -88,6 +93,16 @@ class MyHomePageState extends State<MyHomePage> {
         setState(() {
           removeItem(item);
         });
+
+        _key.currentState..removeCurrentSnackBar()..showSnackBar(
+          SnackBar(
+            content: Text("Deleted: ${item.title}"),
+            action: SnackBarAction(
+              label: "UNDO",
+              onPressed: () => setState(() => addItem(item, index: index)),
+            ),
+          ),
+        );
       },
       direction: DismissDirection.startToEnd,
       background: Container(
@@ -120,28 +135,31 @@ class MyHomePageState extends State<MyHomePage> {
           setDone(item);
         });
       },
-      onLongPress: () => gotoEditItem(item),
+      onLongPress: () => showItemDialog(item: item),
     );
   }
 
-  void goToItemView() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) {
-        return ItemView();
-      }
-    )).then((title) {
-      if (title != null) addItem(Item(title: title));
-    });
+  void showItemDialog({ Item item }) async {
+    final String title = await asyncInputDialog(context, item != null ? item.title : null);
+    if (title != null) {
+      setState(() => 
+        item != null 
+          ? editItem(item, title) 
+          : addItem(Item(title: title)));
+    }
   }
 
-  void gotoEditItem(Item item) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) {
-        return ItemView(item: item);
-      }
-    )).then((title) {
-      if (title != null) editItem(item, title);
-    });
+  Future<String> asyncInputDialog(BuildContext context, String itemTitle) async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) => CustomDialog(
+        title: itemTitle != null ? 'Edit Item' : 'Add Item',
+        buttonText: 'Save',
+        itemTitle: itemTitle,
+        hintText: 'e.g. Shopping.'
+      ),
+    );
   }
 
   void setDone(Item item) {
@@ -153,8 +171,8 @@ class MyHomePageState extends State<MyHomePage> {
     saveData();
   }
 
-  void addItem(Item item) {
-    list.add(item);
+  void addItem(Item item, { int index = 0 }) {
+    list.insert(index, item);
     saveData();
   }
 

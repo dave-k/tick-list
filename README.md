@@ -9,7 +9,9 @@ Manage Shopping / ToDo lists.
 - Add an Item
 - Edit an Item
 - Delete an Item
+- Undo deleted Item
 ### Functionality
+- Custom Dialog
 - Data persistence (Shared Preferences)
 - Unit tests
 - Widget tests
